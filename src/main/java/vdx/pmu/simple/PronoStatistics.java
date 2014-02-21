@@ -75,14 +75,19 @@ public class PronoStatistics {
         TreeMap<Integer, ChevToPlay> chevToPlay = new TreeMap<Integer, ChevToPlay>();
         for (Entry<String, List<Integer>> entry : course.pronos.entrySet()) {
             String pronoName = entry.getKey();
+            Double avgStatPronoName = 1.0;
+            if(stats!=null) {
+                avgStatPronoName = stats.get(pronoName).avg;
+            }
+            
             List<Integer> prono = entry.getValue();
             for (int i = 0; i < prono.size(); i++) {
                 if (course.refCote.containsKey(prono.get(i))) {
                     if (chevToPlay.containsKey(prono.get(i))) {
                         ChevToPlay tmpChevToPlay = chevToPlay.get(prono.get(i));
-                        if (stats.get(pronoName) != null) {
+                        if(stats==null || stats.get(pronoName) != null) {
                             //System.out.println("stats.get("+pronoName+"): "+stats.get(pronoName).toString());
-                            tmpChevToPlay.score += (8 - i) * stats.get(pronoName).avg;
+                            tmpChevToPlay.score += (8 - i) * avgStatPronoName;
                             tmpChevToPlay.cote = course.refCote.get(prono.get(i));
                         } else {
                             //System.out.println("Can't find "+pronoName+" in stats");
@@ -91,7 +96,7 @@ public class PronoStatistics {
                     } else {
                         //System.out.println(course.date+" cev "+i+" of "+pronoName+": "+prono.get(i)));
                         ChevToPlay tmpChevToPlay = new ChevToPlay(prono.get(i));
-                        tmpChevToPlay.score = (8 - i) * stats.get(pronoName).avg;
+                        tmpChevToPlay.score = (8 - i) * avgStatPronoName;
                         tmpChevToPlay.cote = course.refCote.get(prono.get(i));
                         chevToPlay.put(prono.get(i), tmpChevToPlay);
                     }
