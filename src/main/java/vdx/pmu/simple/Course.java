@@ -30,4 +30,14 @@ public class Course {
         return "Course " + name + ": le " + date + " à " + location;
     }
 
+    String dumpStats() {
+        String stats = "";
+        for (int i = 0; i < 4; i++) {
+            Integer chev = finish.get(i);
+            Double cote = refCote.get(chev);
+            stats += chev +"("+cote+") ";
+        }
+        return "Course du " + date + ": "+stats;
+    }
+
 }

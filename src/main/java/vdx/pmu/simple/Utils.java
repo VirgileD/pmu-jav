@@ -71,9 +71,14 @@ public class Utils {
      * @return a list of date as string YYYY-MM-DD, from date-offset days to
      * date -1 day, comma-separated
      */
+    
     static public ArrayList<String> getDateOfRacesBefore(String date, int offset) {
+        return getDateOfRacesBefore(date, offset, 1);
+    }
+    
+    static public ArrayList<String> getDateOfRacesBefore(String date, int offset, int startOffset) {
         DateTime stop = new DateTime(date);
-        stop = stop.minusDays(1);
+        stop = stop.minusDays(startOffset);
         DateTime start = stop.minusDays(offset);
 
         return getDateOfRaces(start.toLocalDateTime().toString() + ".." + stop.toLocalDateTime().toString());

@@ -54,6 +54,13 @@ public class PronoStatistics {
             }
             stats1.avg = tmpInt.doubleValue() / stats1.nbParticip;
         }
+        for (Iterator<Map.Entry<String, Stats>> it = stats.entrySet().iterator(); it.hasNext();) {
+            Map.Entry<String, Stats> entry = it.next();
+            if (entry.getValue().nbParticip<entry.getValue().nbCourses/3) {
+                it.remove();
+            }
+        }
+        //System.out.println(""+stats);
         return stats;
     }
 
@@ -76,16 +83,20 @@ public class PronoStatistics {
         for (Entry<String, List<Integer>> entry : course.pronos.entrySet()) {
             String pronoName = entry.getKey();
             Double avgStatPronoName = 1.0;
-            if(stats!=null) {
-                avgStatPronoName = stats.get(pronoName).avg;
+            if (stats != null) {
+                if (stats.get(pronoName) != null) {
+                    avgStatPronoName = stats.get(pronoName).avg;
+                } else {
+                    avgStatPronoName = 1.0;
+                }
             }
-            
+
             List<Integer> prono = entry.getValue();
             for (int i = 0; i < prono.size(); i++) {
                 if (course.refCote.containsKey(prono.get(i))) {
                     if (chevToPlay.containsKey(prono.get(i))) {
                         ChevToPlay tmpChevToPlay = chevToPlay.get(prono.get(i));
-                        if(stats==null || stats.get(pronoName) != null) {
+                        if (stats == null || stats.get(pronoName) != null) {
                             //System.out.println("stats.get("+pronoName+"): "+stats.get(pronoName).toString());
                             tmpChevToPlay.score += (8 - i) * avgStatPronoName;
                             tmpChevToPlay.cote = course.refCote.get(prono.get(i));
