@@ -56,7 +56,7 @@ public class PronoStatistics {
         }
         for (Iterator<Map.Entry<String, Stats>> it = stats.entrySet().iterator(); it.hasNext();) {
             Map.Entry<String, Stats> entry = it.next();
-            if (entry.getValue().nbParticip<entry.getValue().nbCourses/3) {
+            if (entry.getValue().nbParticip < entry.getValue().nbCourses / 3) {
                 it.remove();
             }
         }

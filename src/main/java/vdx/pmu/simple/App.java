@@ -51,7 +51,16 @@ public class App {
                     bet(ds, strategyMulti, i, new Double(j), false);
                 }
             }*/
-            bet(ds, strategyMulti(ds, 4, 7, 28, 52, false), 17,7.0, true);
+            StrategyMulti strategyMulti = new StrategyMulti(ds);
+            strategyMulti.setBase(4).setNbMulti(7).setCoteMin(28).setCoteMax(52).setUseStats(false).processPlaylist();
+            BetStrategy betStrategy = new BetStrategy();
+            betStrategy.showInter(false).withPlaylist(strategyMulti.getPlaylist());
+            /*for (int i = 0; i < 30; i++) {
+                for (Double j = 1.0; j < 30.0; j++) {
+                    betStrategy.startBetAfter(i).withInitialBet(j).bet();
+                }
+            }*/            
+            betStrategy.showInter(true).startBetAfter(17).withInitialBet(7.0).bet();
         } else {
             Datastore ds = morphia.createDatastore(mongo, "pmuStats");
             int played = 0;
@@ -90,124 +99,4 @@ public class App {
 
     }
 
-    public static PlayList strategyMulti(Datastore ds, int base, int nbMulti, int coteMin, int coteMax, boolean useStats) {
-        PronoStatistics pS = new PronoStatistics(ds);
-        PlayList playList = new PlayList(coteMin, coteMax, nbMulti, base);
-        Map<String, Stats> stats;
-        for (Course thisCourse : ds.find(Course.class).order("date")) {
-            Play play = new Play(thisCourse);
-            playList.playList.put(thisCourse.date, play);
-            if (useStats) {
-                stats = pS.getStats(ds.find(Course.class).field("date").in(getDateOfRacesBefore(thisCourse.date, 60, 15)).asList());
-                //stats = pS.getStats(ds.find(Course.class).field("gains.m7").greaterThan(new  Integer(30)).asList());
-            } else {
-                stats = null;
-            }
-            Map<Double, ChevToPlay> apply = pS.apply(thisCourse, stats);
-            play.myFinish = new ArrayList<Integer>();
-            //System.out.println("finish: " + thisCourse.finish.toString());
-            //System.out.println("refCote: " + thisCourse.refCote.toString());
-            int i = 0;
-            for (Entry<Double, ChevToPlay> entry : apply.entrySet()) {
-                if (i < base) {
-                    //System.out.println("add firsts: " + i + "/4: " + en.getKey());
-                    play.myFinish.add(entry.getValue().chev);
-                } else {
-                    //System.out.println("///"+entry.getValue().toString());
-                    Double cote = entry.getValue().cote;
-                    //System.out.println("check " + en.getKey() + ": " + en.getValue());
-                    if (cote >= coteMin && cote <= coteMax) {
-                        //System.out.println("add " + en.getKey() + ": " + en.getValue());
-                        play.myFinish.add(entry.getValue().chev);
-                    }
-                    if (play.myFinish.size() >= nbMulti) {
-                        break;
-                    }
-                }
-                i++;
-            }
-        }
-        return playList;
-    }
-
-    public static void bet(Datastore ds, PlayList playlist, Integer startBetAfter, Double initialBet, boolean showInter) {
-        Double gains = 0.0;
-        Double bet = 0.0;
-        Double maxLoose = 0.0;
-        Double loose = 0.0;
-        Integer maxEcart = 0;
-        Integer ecart = 0;
-        Integer nbEcart = 0;
-        Double avgEcart = 0.0;
-        Integer nbWin = 0;
-        Integer nbCourses = 0;
-        for (Entry<String, Play> entry : playlist.playList.entrySet()) {
-            String string = entry.getKey();
-            Play thisPlay = entry.getValue();
-            Course thisCourse = thisPlay.course;
-            if (thisCourse.finish != null && thisCourse.finish.size() >= 4) {
-                nbCourses++;
-                gains -= bet * 3;
-                thisCourse.finish.remove(null);
-                if (thisCourse.gains.containsKey("m" + thisPlay.myFinish.size()) && thisPlay.myFinish.containsAll(thisCourse.finish.subList(0, 4))) {
-                    //System.out.println("- "+thisCourse.date+" "+thisCourse.gains+" "+myFinish.size());
-                    gains += thisCourse.gains.get("m" + thisPlay.myFinish.size()) * bet;
-                    if (bet != 0.0 && !thisPlay.myFinish.subList(0, 4).containsAll(thisCourse.finish.subList(0, 4))) {
-                        bet = 0.0;
-                        if (maxLoose <= loose) {
-                            if (showInter) {
-                                System.out.println("max loose reached: " + maxLoose.toString());
-                            }
-                            maxLoose = loose;
-                        }
-                        nbEcart++;
-                        avgEcart += ecart;
-                        ecart = 0;
-                        loose = 0.0;
-                        nbWin++;
-                        if (showInter) {
-                            System.out.println(thisCourse.date + " WIN: " + thisPlay.myFinish.toString() + " / " + thisCourse.finish.toString() + ": m" + thisPlay.myFinish.size() + ": " + thisCourse.gains.get("m" + thisPlay.myFinish.size()) + " -> " + gains.toString());
-                        }
-                    } else {
-                        if (showInter) {
-                            System.out.println(thisCourse.date + " WIN:-" + thisPlay.myFinish.toString() + " / " + thisCourse.finish.toString() + ": m" + thisPlay.myFinish.size() + ": " + thisCourse.gains.get("m" + thisPlay.myFinish.size()) + " -> " + gains.toString());
-                        }
-                    }
-                } else {
-                    loose += bet * 3;
-                    if (ecart == startBetAfter) {
-                        if (showInter) {
-                            System.out.println("------ start betting--");
-                        }
-                        bet = initialBet;
-                    } else {
-                        if (ecart > startBetAfter) {
-                            bet++;
-                        }
-                    }
-                    ecart++;
-                    if (maxLoose < loose) {
-                        maxLoose = loose;
-                        maxEcart = ecart;
-                    }
-                    if (showInter) {
-                        System.out.println(thisCourse.date + " LOO: " + thisPlay.myFinish.toString() + " / " + thisCourse.finish.subList(0, 4).toString());
-                    }
-                }
-            } else {
-                if (showInter) {
-                    System.out.println(thisCourse.date + " NOF: " + thisPlay.myFinish.toString() + " (finish is " + thisCourse.finish + ")");
-                }
-            }
-        }
-        avgEcart /= nbEcart;
-        //if (gains > 3000 && maxLoose < 1500 && nbWin > 10) {
-        if(maxLoose<400)
-        System.out.println("[ "+startBetAfter+"/"+ initialBet +" / "+ playlist.coteMin + "/" + playlist.coteMax + "] gains: " + gains.toString() + " / maxLoose: " + maxLoose.toString() + " / nbWin: " + nbWin + " / nbCourses: " + nbCourses + " maxEcart: " + maxEcart + " / avgEcart: " + avgEcart);
-        //}
-        /*pS.getDateOfRaces("2013-09-12..2013-09-20,2014-03-01");
-         Map<String, Stats> stats = pS.getStats(pS.getCourses(pS.getDateOfRaces("2013-09-12..2013-09-13")));
-         System.out.println("stats: " + stats.toString());
-         System.out.println(pS.apply(thisCourse1, stats).toString());*/
-    }
 }
