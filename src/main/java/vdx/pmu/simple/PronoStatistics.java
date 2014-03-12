@@ -15,10 +15,7 @@ import java.util.TreeMap;
  */
 public class PronoStatistics {
 
-    Datastore ds;
-
-    public PronoStatistics(Datastore ds) {
-        this.ds = ds;
+    public PronoStatistics() {
     }
 
     public Map<String, Stats> getStats(List<Course> courses) {
@@ -86,8 +83,6 @@ public class PronoStatistics {
             if (stats != null) {
                 if (stats.get(pronoName) != null) {
                     avgStatPronoName = stats.get(pronoName).avg;
-                } else {
-                    avgStatPronoName = 1.0;
                 }
             }
 
@@ -96,14 +91,9 @@ public class PronoStatistics {
                 if (course.refCote.containsKey(prono.get(i))) {
                     if (chevToPlay.containsKey(prono.get(i))) {
                         ChevToPlay tmpChevToPlay = chevToPlay.get(prono.get(i));
-                        if (stats == null || stats.get(pronoName) != null) {
-                            //System.out.println("stats.get("+pronoName+"): "+stats.get(pronoName).toString());
-                            tmpChevToPlay.score += (8 - i) * avgStatPronoName;
-                            tmpChevToPlay.cote = course.refCote.get(prono.get(i));
-                        } else {
-                            //System.out.println("Can't find "+pronoName+" in stats");
-                            i = prono.size();
-                        }
+                        tmpChevToPlay.score += (8 - i) * avgStatPronoName;
+                        tmpChevToPlay.cote = course.refCote.get(prono.get(i));
+                        chevToPlay.put(prono.get(i), tmpChevToPlay);
                     } else {
                         //System.out.println(course.date+" cev "+i+" of "+pronoName+": "+prono.get(i)));
                         ChevToPlay tmpChevToPlay = new ChevToPlay(prono.get(i));
@@ -116,7 +106,6 @@ public class PronoStatistics {
         }
         TreeMap<Double, ChevToPlay> orderedChevToPlay = new TreeMap<Double, ChevToPlay>();
         for (Entry<Integer, ChevToPlay> entry : chevToPlay.entrySet()) {
-            //Integer int = entry.getKey();
             ChevToPlay tmpChevToPlay = entry.getValue();
             orderedChevToPlay.put(tmpChevToPlay.score, tmpChevToPlay);
         }

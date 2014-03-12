@@ -6,9 +6,11 @@
 package vdx.pmu.simple;
 
 import com.google.code.morphia.Datastore;
+import com.google.code.morphia.query.Query;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
+import static vdx.pmu.simple.Utils.getDate;
 import static vdx.pmu.simple.Utils.getDateOfRacesBefore;
 
 /**
@@ -85,7 +87,7 @@ public class StrategyMulti {
     }
     
     public PlayList processPlaylist() {
-        PronoStatistics pS = new PronoStatistics(ds);
+        PronoStatistics pS = new PronoStatistics();
         PlayList playList = new PlayList(coteMin, coteMax, nbMulti, base);
         Map<String, Stats> stats;
         Map<Double, ChevToPlay> apply;
@@ -94,7 +96,10 @@ public class StrategyMulti {
             playList.playList.put(thisCourse.date, play);
             if(!coteOnly) {
                 if (useStats) {
-                    stats = pS.getStats(ds.find(Course.class).field("date").in(getDateOfRacesBefore(thisCourse.date, 60, 15)).asList());
+                    Query<Course> find = ds.find(Course.class);
+                    find.and(find.criteria("date").greaterThan(getDate(thisCourse.date, 60)), find.criteria("date").lessThan(getDate(thisCourse.date, 45)));
+                    stats = pS.getStats(find.asList());
+                            //.in(getDateOfRacesBefore(thisCourse.date, 30, 15)).asList());
                     //stats = pS.getStats(ds.find(Course.class).field("gains.m7").greaterThan(new  Integer(30)).asList());
                 } else {
                     stats = null;

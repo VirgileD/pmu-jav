@@ -52,15 +52,43 @@ public class App {
                 }
             }*/
             StrategyMulti strategyMulti = new StrategyMulti(ds);
-            strategyMulti.setBase(4).setNbMulti(7).setCoteMin(28).setCoteMax(52).setUseStats(false).processPlaylist();
-            BetStrategy betStrategy = new BetStrategy();
-            betStrategy.showInter(false).withPlaylist(strategyMulti.getPlaylist());
-            /*for (int i = 0; i < 30; i++) {
-                for (Double j = 1.0; j < 30.0; j++) {
-                    betStrategy.startBetAfter(i).withInitialBet(j).bet();
+            boolean playNow=false;
+            if(playNow) {
+                strategyMulti.setBase(4).setNbMulti(7).setCoteMin(29).setCoteMax(45).setUseStats(false).processPlaylist();
+                BetStrategy betStrategy = new BetStrategy();
+                betStrategy.showInter(false).withPlaylist(strategyMulti.getPlaylist());
+                betStrategy.showInter(true).startBetAfter(7).stopBetAfter(9).withInitialBet(15.0).bet();
+            } else {
+                TreeMap<Double,String> results = new TreeMap<Double,String> ();
+                // comput les differentes possibilites de paramètres
+                for(int coteMin = 25; coteMin<30; coteMin++) {
+                    //System.out.println("cote Min is "+coteMin);
+                    for(int coteMax = coteMin; coteMax<80; coteMax++) {
+                        //System.out.println("cote Max is "+coteMax);
+                        strategyMulti.setBase(4).setNbMulti(7).setCoteMin(coteMin).setCoteMax(coteMax).setUseStats(false).processPlaylist();
+                        BetStrategy betStrategy = new BetStrategy();
+                        betStrategy.showInter(false).withPlaylist(strategyMulti.getPlaylist());
+                        for (int i = 0; i < 30; i++) {
+                            //System.out.println("start Bet after "+i);
+                            for (int k = i; k < 40; k++) {
+                                //System.out.println("stop Bet after "+k);
+                                for (Double j = 1.0; j < 30.0; j++) {
+                                    betStrategy.startBetAfter(i).stopBetAfter(k).withInitialBet(j).bet();
+                                    if(betStrategy.nbWin > 5 && betStrategy.gains > 7000 && betStrategy.maxLoose < 500) {
+                                        results.put(betStrategy.gains*betStrategy.nbWin/betStrategy.maxLoose, betStrategy.toString());
+                                        System.out.println("new winning bet added: "+betStrategy.gains);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
-            }*/            
-            betStrategy.showInter(true).startBetAfter(17).withInitialBet(7.0).bet();
+                for (Entry<Double, String> entry : results.entrySet()) {
+                    System.out.println(entry.getValue());
+                    
+                }
+            }
+            
         } else {
             Datastore ds = morphia.createDatastore(mongo, "pmuStats");
             int played = 0;

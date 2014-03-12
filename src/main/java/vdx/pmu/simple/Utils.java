@@ -66,16 +66,22 @@ public class Utils {
      * return a list of date as string YYYY-MM-DD, from date-offset days to date
      * -1 day, comma-separated
      *
+     * @param courseDate
      * @param date the date, exclusive to finish the list with
      * @param offset the offset in days to start the list with
      * @return a list of date as string YYYY-MM-DD, from date-offset days to
      * date -1 day, comma-separated
      */
-    
+    static public String getDate(String courseDate, int offset) {
+        DateTime date = new DateTime(courseDate);
+        date = date.minusDays(offset);
+        return date.toLocalDateTime().toString();
+    }
+
     static public ArrayList<String> getDateOfRacesBefore(String date, int offset) {
         return getDateOfRacesBefore(date, offset, 1);
     }
-    
+
     static public ArrayList<String> getDateOfRacesBefore(String date, int offset, int startOffset) {
         DateTime stop = new DateTime(date);
         stop = stop.minusDays(startOffset);
